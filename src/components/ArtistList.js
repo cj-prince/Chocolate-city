@@ -2,7 +2,12 @@ import React from "react";
 import { useQuery } from "react-query";
 import { fetchArtists } from "../apis/api";
 import { useNavigate } from "react-router-dom";
-import { EnvelopeIcon, PhoneIcon } from "@heroicons/react/20/solid";
+import {
+  EnvelopeIcon,
+  PhoneIcon,
+  ChatBubbleLeftIcon,
+} from "@heroicons/react/20/solid";
+
 
 const ArtistList = () => {
   const { data: artists, isLoading } = useQuery("artists", fetchArtists);
@@ -47,11 +52,14 @@ const ArtistList = () => {
                     {artist?.website}
                   </p>
                 </div>
-                <img
-                  className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-300"
-                  src={artist?.imageUrl}
-                  alt=""
-                />
+                <div>
+                  <p
+                    className="text-sm  px-4 cursor-pointer"
+                    onClick={() => navigate(`/artists/${artist.id}/tweets`)}
+                  >
+                    <ChatBubbleLeftIcon className="h-5 w-5" />
+                  </p>
+                </div>
               </div>
               <div>
                 <div className="-mt-px flex divide-x divide-gray-200">

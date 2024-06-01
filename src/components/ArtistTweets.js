@@ -1,21 +1,36 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
-import { fetchTweets, createTweet, updateTweet, deleteTweet } from "../apis/api";
+import { useNavigate } from "react-router-dom";
+import {
+  fetchTweets,
+  createTweet,
+  updateTweet,
+  deleteTweet,
+} from "../apis/api";
 import { useParams } from "react-router-dom";
+import {
+  PencilSquareIcon,
+  TrashIcon,
+  PlusIcon,
+  PlusCircleIcon,
+} from "@heroicons/react/20/solid";
+import TweetModal from "./TweetModal";
 
 const ArtistTweets = () => {
   const { artistId } = useParams();
+  const navigate = useNavigate();
   const { data: tweets, isLoading } = useQuery(["tweets", artistId], () =>
     fetchTweets(artistId)
   );
   const queryClient = useQueryClient();
 
-  const [newTweet, setNewTweet] = useState("");
   const [editTweet, setEditTweet] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const createTweetMutation = useMutation(createTweet, {
     onSuccess: () => {
       queryClient.invalidateQueries(["tweets", artistId]);
+      setShowModal(false);
     },
   });
 
@@ -34,10 +49,9 @@ const ArtistTweets = () => {
     },
   });
 
-  const handleCreateTweet = () => {
+  const handleCreateTweet = (newTweet) => {
     if (newTweet.trim()) {
       createTweetMutation.mutate({ postId: artistId, body: newTweet });
-      setNewTweet("");
     }
   };
 
@@ -56,23 +70,39 @@ const ArtistTweets = () => {
   }
 
   return (
-    <div>
-      <h2>Tweets</h2>
-      <ul>
+    <div className="w-full bg-[#060501] text-white text-center overflow-y-auto">
+      <div className="flex justify-end gap-4 mx-auto max-w-7xl pt-4 px-4">
+        <button onClick={() => setShowModal(true)}>
+          <PlusCircleIcon className="h-6 w-6" />
+        </button>
+        <button
+          onClick={() => navigate("/artists")}
+          className="mb-4 p-2 bg-green-700 text-white rounded-lg"
+        >
+          Back
+        </button>
+      </div>
+      <div className="grid grid-cols-1 mt-8 mb-8 max-w-2xl px-4 mx-auto gap-4">
         {tweets.map((tweet) => (
-          <li key={tweet.id} className="flex justify-between items-center">
-            {editTweet?.id === tweet.id ? (
-              <input
-                type="text"
-                value={editTweet.content}
-                onChange={(e) =>
-                  setEditTweet({ ...editTweet, content: e.target.value })
-                }
-              />
-            ) : (
-              <span>{tweet.body}</span>
-            )}
-            <div>
+          <div key={tweet.id} className="bg-white rounded p-4 shadow">
+            <div className="mb-2 text-black">
+              {editTweet?.id === tweet.id ? (
+                <textarea
+                className="border ring-2 w-full"
+                  type="text"
+                  value={editTweet.content}
+                  onChange={(e) =>
+                    setEditTweet({ ...editTweet, content: e.target.value })
+                  }
+                />
+              ) : (
+                <span>{tweet.body}</span>
+              )}
+            </div>
+            <div className="text-gray-500 text-sm">
+              {tweet.email} - {tweet.name}
+            </div>
+            <div className="mt-2 flex text-black items-center">
               {editTweet?.id === tweet.id ? (
                 <button onClick={handleUpdateTweet}>Save</button>
               ) : (
@@ -81,25 +111,22 @@ const ArtistTweets = () => {
                     setEditTweet({ id: tweet.id, content: tweet.body })
                   }
                 >
-                  Edit
+                  <PencilSquareIcon className="h-6 w-6" />
                 </button>
               )}
               <button onClick={() => deleteTweetMutation.mutate(tweet.id)}>
-                Delete
+                <TrashIcon className="h-6 w-6" />
               </button>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
-      <div>
-        <input
-          type="text"
-          value={newTweet}
-          onChange={(e) => setNewTweet(e.target.value)}
-          placeholder="Write a tweet..."
-        />
-        <button onClick={handleCreateTweet}>Tweet</button>
       </div>
+
+      <TweetModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        handleCreateTweet={handleCreateTweet}
+      />
     </div>
   );
 };
